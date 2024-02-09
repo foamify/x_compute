@@ -47,6 +47,13 @@ pub async fn init_app() {
 }
 
 async fn run_compute_thread() {
+    {
+        let map = COMPUTES.write().unwrap();
+        if map.contains_key(COMPUTE_KEY) {
+            println!("Compute thread already running");
+        }
+    }
+
     let (compute_request_tx, compute_request_rx): (
         Sender<ComputeRequest>,
         Receiver<ComputeRequest>,

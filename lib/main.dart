@@ -1,6 +1,7 @@
 import 'dart:math';
-import 'dart:typed_data';
+import 'dart:ui';
 
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -20,7 +21,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final pointsInside = ValueNotifier(<F32Array2>[]);
+  final pointsInside = ValueNotifier(IList<F32Array2>());
   final rect = ValueNotifier(ComputeRect(
     min: F32Array2(Float32List.fromList([0.0, 0.0])),
     max: F32Array2(Float32List.fromList([0.0, 0.0])),
@@ -28,7 +29,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    final points = List.generate(2000 * 4, (index) {
+    final points = List.generate(10000 * 4, (index) {
       final size = MediaQuery.sizeOf(context);
       return [
         Random().nextInt(size.width.toInt()),
@@ -43,14 +44,14 @@ class _MyAppState extends State<MyApp> {
         backgroundColor: Colors.grey,
         body: Stack(
           children: [
-            CustomPaint(
-              painter: PointPainter(points, Colors.blue),
-            ),
+            // CustomPaint(
+            //   painter: PointPainter(points, Colors.blue),
+            // ),
             ValueListenableBuilder(
                 valueListenable: pointsInside,
                 builder: (context, value, child) {
                   return CustomPaint(
-                    painter: PointPainter(value, Colors.red),
+                    painter: PointPainter(value.unlockView, Colors.blueGrey),
                   );
                 }),
             ValueListenableBuilder(
@@ -71,22 +72,25 @@ class _MyAppState extends State<MyApp> {
                     Float32List.fromList(maxRect),
                   ),
                 );
-                final now = DateTime.now();
-                SchedulerBinding.instance.scheduleTask(
+                // final now = DateTime.now();
+                SchedulerBinding.instance
+                    .scheduleTask(
                   () => runCompute(
                     points: points,
                     rect: rect.value,
-                  ).then(
-                    (value) {
-                      // print('Elapsed: ${DateTime.now().difference(now)}');
-                      pointsInside.value = value ?? [];
-                    },
                   ),
                   Priority.animation,
+                )
+                    .then(
+                  (value) {
+                    // print('Elapsed: ${DateTime.now().difference(now)}');
+                    pointsInside.value.clear().flush;
+                    pointsInside.value = (value ?? []).lock;
+                  },
                 );
               },
-              child:
-                  Center(child: Text('Hover to calculate points inside rect')),
+              child: const Center(
+                  child: Text('Hover to calculate points inside rect')),
             ),
           ],
         ),
@@ -102,25 +106,23 @@ class PointPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-          //
-          ..color = color
-          ..strokeWidth = 1
-        // ..style = PaintingStyle.stroke
-        ;
-
-    for (final point in points) {
-      canvas.drawCircle(
-        Offset(point[0], point[1]),
-        4,
-        paint,
-      );
-      canvas.drawCircle(
-        Offset(point[0], point[1]),
-        1,
-        Paint()..color = Colors.white,
-      );
-    }
+    final view =
+        points.map((point) => Offset(point[0], point[1])).toIList().unlockView;
+    canvas.drawPoints(
+      PointMode.points,
+      view,
+      Paint()
+        ..color = color
+        ..strokeWidth = 5
+        ..strokeCap = StrokeCap.round,
+    );
+    canvas.drawPoints(
+      PointMode.points,
+      view,
+      Paint()
+        ..color = Colors.white
+        ..strokeWidth = 1,
+    );
   }
 
   @override
