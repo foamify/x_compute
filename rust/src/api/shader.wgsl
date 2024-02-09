@@ -10,8 +10,8 @@ struct Rect {
 
 
 fn isPointInsideRect(point: vec2<f32>, rect: Rect) -> bool {
-    return point.x >= rect[0].x && point.y >= rect[0].y &&
-           point.x <= rect[1].x && point.y <= rect[1].y;
+    return point.x >= rect.min.x && point.y >= rect.min.y &&
+           point.x <= rect.max.x && point.y <= rect.max.y;
 }
 
 @compute

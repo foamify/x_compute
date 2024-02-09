@@ -38,80 +38,13 @@ flutter_rust_bridge::frb_generated_default_handler!();
 
 // Section: wire_funcs
 
-fn wire_run_collatz_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "run_collatz",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_points = <Vec<[f32; 2]>>::sse_decode(&mut deserializer);
-            let api_rect = <crate::api::compute::ComputeRect>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| async move {
-                transform_result_sse(
-                    (move || async move {
-                        Result::<_, ()>::Ok(
-                            crate::api::compute::run_collatz(api_points, api_rect).await,
-                        )
-                    })()
-                    .await,
-                )
-            }
-        },
-    )
-}
-fn wire_greet_impl(
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "greet",
-            port: None,
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_name = <String>::sse_decode(&mut deserializer);
-            deserializer.end();
-            transform_result_sse((move || {
-                Result::<_, ()>::Ok(crate::api::simple::greet(api_name))
-            })())
-        },
-    )
-}
 fn wire_init_app_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
     data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "init_app",
             port: Some(port_),
@@ -128,9 +61,47 @@ fn wire_init_app_impl(
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             deserializer.end();
-            move |context| {
+            move |context| async move {
+                transform_result_sse((move || async move {
+                         Result::<_,()>::Ok(crate::api::simple::init_app().await)
+                    })().await)
+            }
+        },
+    )
+}
+fn wire_run_compute_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "run_compute",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_points = <Vec<[f32; 2]>>::sse_decode(&mut deserializer);
+            let api_rect = <crate::api::simple::ComputeRect>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
                 transform_result_sse(
-                    (move || Result::<_, ()>::Ok(crate::api::simple::init_app()))(),
+                    (move || async move {
+                        Result::<_, ()>::Ok(
+                            crate::api::simple::run_compute(api_points, api_rect).await,
+                        )
+                    })()
+                    .await,
                 )
             }
         },
@@ -139,20 +110,12 @@ fn wire_init_app_impl(
 
 // Section: dart2rust
 
-impl SseDecode for String {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <Vec<u8>>::sse_decode(deserializer);
-        return String::from_utf8(inner).unwrap();
-    }
-}
-
-impl SseDecode for crate::api::compute::ComputeRect {
+impl SseDecode for crate::api::simple::ComputeRect {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_min = <[f32; 2]>::sse_decode(deserializer);
         let mut var_max = <[f32; 2]>::sse_decode(deserializer);
-        return crate::api::compute::ComputeRect {
+        return crate::api::simple::ComputeRect {
             min: var_min,
             max: var_max,
         };
@@ -198,22 +161,14 @@ impl SseDecode for Vec<f32> {
     }
 }
 
-impl SseDecode for Vec<u8> {
+impl SseDecode for Option<Vec<[f32; 2]>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut len_ = <i32>::sse_decode(deserializer);
-        let mut ans_ = vec![];
-        for idx_ in 0..len_ {
-            ans_.push(<u8>::sse_decode(deserializer));
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<Vec<[f32; 2]>>::sse_decode(deserializer));
+        } else {
+            return None;
         }
-        return ans_;
-    }
-}
-
-impl SseDecode for u8 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        deserializer.cursor.read_u8().unwrap()
     }
 }
 
@@ -245,8 +200,8 @@ fn pde_ffi_dispatcher_primary_impl(
 ) {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
-        1 => wire_run_collatz_impl(port, ptr, rust_vec_len, data_len),
-        3 => wire_init_app_impl(port, ptr, rust_vec_len, data_len),
+        1 => wire_init_app_impl(port, ptr, rust_vec_len, data_len),
+        2 => wire_run_compute_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -259,7 +214,6 @@ fn pde_ffi_dispatcher_sync_impl(
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
-        2 => wire_greet_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -267,7 +221,7 @@ fn pde_ffi_dispatcher_sync_impl(
 // Section: rust2dart
 
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::compute::ComputeRect {
+impl flutter_rust_bridge::IntoDart for crate::api::simple::ComputeRect {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.min.into_into_dart().into_dart(),
@@ -277,25 +231,18 @@ impl flutter_rust_bridge::IntoDart for crate::api::compute::ComputeRect {
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::compute::ComputeRect
+    for crate::api::simple::ComputeRect
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<crate::api::compute::ComputeRect>
-    for crate::api::compute::ComputeRect
+impl flutter_rust_bridge::IntoIntoDart<crate::api::simple::ComputeRect>
+    for crate::api::simple::ComputeRect
 {
-    fn into_into_dart(self) -> crate::api::compute::ComputeRect {
+    fn into_into_dart(self) -> crate::api::simple::ComputeRect {
         self
     }
 }
 
-impl SseEncode for String {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <Vec<u8>>::sse_encode(self.into_bytes(), serializer);
-    }
-}
-
-impl SseEncode for crate::api::compute::ComputeRect {
+impl SseEncode for crate::api::simple::ComputeRect {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <[f32; 2]>::sse_encode(self.min, serializer);
@@ -343,20 +290,13 @@ impl SseEncode for Vec<f32> {
     }
 }
 
-impl SseEncode for Vec<u8> {
+impl SseEncode for Option<Vec<[f32; 2]>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(self.len() as _, serializer);
-        for item in self {
-            <u8>::sse_encode(item, serializer);
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <Vec<[f32; 2]>>::sse_encode(value, serializer);
         }
-    }
-}
-
-impl SseEncode for u8 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        serializer.cursor.write_u8(self).unwrap();
     }
 }
 

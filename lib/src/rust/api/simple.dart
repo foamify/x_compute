@@ -4,7 +4,46 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../frb_generated.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-String greet({required String name, dynamic hint}) =>
-    RustLib.instance.api.greet(name: name, hint: hint);
+Future<List<F32Array2>?> runCompute(
+        {required List<F32Array2> points,
+        required ComputeRect rect,
+        dynamic hint}) =>
+    RustLib.instance.api.runCompute(points: points, rect: rect, hint: hint);
+
+class ComputeRect {
+  final F32Array2 min;
+  final F32Array2 max;
+
+  const ComputeRect({
+    required this.min,
+    required this.max,
+  });
+
+  @override
+  int get hashCode => min.hashCode ^ max.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ComputeRect &&
+          runtimeType == other.runtimeType &&
+          min == other.min &&
+          max == other.max;
+}
+
+class F32Array2 extends NonGrowableListView<double> {
+  static const arraySize = 2;
+
+  @internal
+  Float32List get inner => _inner;
+  final Float32List _inner;
+
+  F32Array2(this._inner)
+      : assert(_inner.length == arraySize),
+        super(_inner);
+
+  F32Array2.init() : this(Float32List(arraySize));
+}
