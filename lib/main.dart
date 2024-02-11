@@ -21,7 +21,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final pointsInside = ValueNotifier(IList<F32Array2>());
+  final pointsInside = ValueNotifier<Iterable<F32Array2>>([]);
   final rect = ValueNotifier(ComputeRect(
     min: F32Array2(Float32List.fromList([0.0, 0.0])),
     max: F32Array2(Float32List.fromList([0.0, 0.0])),
@@ -29,7 +29,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    final points = List.generate(10000 * 4, (index) {
+    final points = List.generate(50000, (index) {
       final size = MediaQuery.sizeOf(context);
       return [
         Random().nextInt(size.width.toInt()),
@@ -38,6 +38,8 @@ class _MyAppState extends State<MyApp> {
         )
       ].map((e) => e.toDouble()).toList();
     }).map((e) => F32Array2(Float32List.fromList(e))).toList();
+
+    var isComputing = false;
 
     return MaterialApp(
       home: Scaffold(
@@ -51,7 +53,7 @@ class _MyAppState extends State<MyApp> {
                 valueListenable: pointsInside,
                 builder: (context, value, child) {
                   return CustomPaint(
-                    painter: PointPainter(value.unlockView, Colors.blueGrey),
+                    painter: PointPainter(value, Colors.blueGrey),
                   );
                 }),
             ValueListenableBuilder(
@@ -62,7 +64,7 @@ class _MyAppState extends State<MyApp> {
                   );
                 }),
             MouseRegion(
-              onHover: (event) {
+              onHover: (event) async {
                 final minRect = [0.0, 0.0];
                 final maxRect = [event.position.dx, event.position.dy];
                 // print(maxRect);
@@ -72,20 +74,26 @@ class _MyAppState extends State<MyApp> {
                     Float32List.fromList(maxRect),
                   ),
                 );
+                if (isComputing == true) return;
+                isComputing = true;
                 // final now = DateTime.now();
                 SchedulerBinding.instance
                     .scheduleTask(
                   () => runCompute(
-                    points: points,
+                    points: points.take(points.length).toList(),
                     rect: rect.value,
                   ),
                   Priority.animation,
                 )
                     .then(
                   (value) {
+                    isComputing = false;
                     // print('Elapsed: ${DateTime.now().difference(now)}');
-                    pointsInside.value.clear().flush;
-                    pointsInside.value = (value ?? []).lock;
+                    // pointsInside.value.clear().flush;
+
+                    if (value != null) {
+                      pointsInside.value = value;
+                    }
                   },
                 );
               },
@@ -101,7 +109,7 @@ class _MyAppState extends State<MyApp> {
 
 class PointPainter extends CustomPainter {
   PointPainter(this.points, this.color);
-  final List<F32Array2> points;
+  final Iterable<F32Array2> points;
   final Color color;
 
   @override
