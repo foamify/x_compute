@@ -1,3 +1,3 @@
 # x_compute
 
-A new Flutter project.
+Experiment to leverage computation in GPU using rust wgpu crate
